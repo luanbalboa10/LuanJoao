@@ -46,8 +46,6 @@ int comp_buf[8];
 bool flag = 0;
 
 // Protótipo das funções 
-void escrever_fifo(char dado, struct k_fifo *my_fifo);
-char ler_fifo(struct k_fifo *my_fifo);
 void start_gpio(void);
 void start_uart(void);
 void serial_cb(const struct device *dev, void *user_data);
@@ -58,6 +56,8 @@ int destrincha_id(char cabecalho);
 void shift_direita(int *buf, int tam);
 void shift_esquerda(int *buf, int tam);
 int vetor_para_int(int *vetor, int tamanho);
+void escrever_fifo(char dado, struct k_fifo *my_fifo);
+char ler_fifo(struct k_fifo *my_fifo);
 
 K_TIMER_DEFINE(tx_timer, transmissao, NULL); // Define os timers
 K_TIMER_DEFINE(rx_timer, recepcao, NULL);
@@ -73,28 +73,6 @@ struct data_item_t
     char value;            // Valor armazenado 
 };
 
-// Escreve na fifo
-void escrever_fifo(char dado, struct k_fifo *my_fifo)
-{
-    struct data_item_t *item = k_malloc(sizeof(struct data_item_t)); // Aloca memória para o item da fifo
-    if (!item) { 
-        printk("Erro: Falha ao alocar memória!\n");
-        return;
-    }
-    //printk(" escrevi na fifo ");
-    //printk(" dado = %c \n", dado);
-    item->value = dado; // Coloca o valor desejado no struct
-    k_fifo_put(my_fifo, item); // Coloca na fifo
-}
-
-// Lê a fifo
-char ler_fifo(struct k_fifo *my_fifo)
-{
-    struct data_item_t *item = k_fifo_get(my_fifo, K_FOREVER); // Pega o valor da fifo
-    char value = item->value; // Guarda numa variável
-    k_free(item); // Libera espaço na memória
-    return value; // Retorna o valor
-}
 
 /* ----------------------------------------------------------------- */
 
@@ -419,6 +397,29 @@ int vetor_para_int(int *vetor, int tamanho)
     }
     return valor;
 } 
+
+// Escreve na fifo
+void escrever_fifo(char dado, struct k_fifo *my_fifo)
+{
+    struct data_item_t *item = k_malloc(sizeof(struct data_item_t)); // Aloca memória para o item da fifo
+    if (!item) { 
+        printk("Erro: Falha ao alocar memória!\n");
+        return;
+    }
+    //printk(" escrevi na fifo ");
+    //printk(" dado = %c \n", dado);
+    item->value = dado; // Coloca o valor desejado no struct
+    k_fifo_put(my_fifo, item); // Coloca na fifo
+}
+
+// Lê a fifo
+char ler_fifo(struct k_fifo *my_fifo)
+{
+    struct data_item_t *item = k_fifo_get(my_fifo, K_FOREVER); // Pega o valor da fifo
+    char value = item->value; // Guarda numa variável
+    k_free(item); // Libera espaço na memória
+    return value; // Retorna o valor
+}
 
 // Definição das threads 
 K_THREAD_DEFINE(empacota_id, TAMANHO_PILHA, empacota_thread, NULL, NULL, NULL, 5, 0, 0);
